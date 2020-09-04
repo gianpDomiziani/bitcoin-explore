@@ -27,6 +27,7 @@ dict_bpi = payload['bpi'] # key: data, value: USD
 # Read 
 # =====================================================================
 
+C = 0.00000001  # 1 SATOSHI = C BTC
 df = spark.read.csv("datasets/txs_small.csv", header=True, inferSchema=True).toDF('id', 'timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change')
 df.cache() # improve computational time 
 
@@ -40,8 +41,8 @@ def usd_avg(x):
 
 usd_avg = F.udf(usd_avg)
 dfavg = dfDate.withColumn('usdAvg', usd_avg(F.col('date')))  # add a new column: avg USD for the given date
-final = dfavg.withColumn('usd_in', F.col('usdAvg')*F.col('amount_in'))\
-             .withColumn('usd_out', F.col('usdAvg')*F.col('amount_out'))
+final = dfavg.withColumn('usd_in', F.col('usdAvg')*(F.col('amount_in')*C))\
+             .withColumn('usd_out', F.col('usdAvg')*(F.col('amount_out')*C))
 
 final.show(5)
 final.write.csv('txsData', header=True)

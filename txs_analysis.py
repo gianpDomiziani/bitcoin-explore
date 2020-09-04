@@ -79,6 +79,7 @@ silhouette_km = np.array(getSilhouette(df_sc))
 x = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 plt.plot(x, silhouette_km, linewidth=1, marker='.', label='Kmeans')
 plt.title('silhouette metrics: KMeans')
+plt.xlabel('K')
 plt.grid()
 plt.savefig('plots/KmeansSil.png')
 plt.close()
