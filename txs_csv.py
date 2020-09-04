@@ -27,7 +27,7 @@ dict_bpi = payload['bpi'] # key: data, value: USD
 # Read 
 # =====================================================================
 
-C = 0.00000001  # 1 SATOSHI = C BTC
+C = 0.00000001  # 1 BTC = C*SATOSHI
 df = spark.read.csv("datasets/txs_small.csv", header=True, inferSchema=True).toDF('id', 'timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change')
 df.cache() # improve computational time 
 
