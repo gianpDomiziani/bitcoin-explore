@@ -27,13 +27,13 @@ spark = SparkSession.builder.getOrCreate() # bridge between driver script and Sp
 # ======================
 # Read dataset
 # ======================
-df = spark.read.csv("txsData/txs_smallAVG.csv", header=True, inferSchema=True).toDF('id', 'timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'date', 'usdAvg', 'usd_in', 'usd_out')
+df = spark.read.csv("txsData/txs_small.csv", header=True, inferSchema=True).toDF('id', 'timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'date', 'usdAvg', 'usd_in', 'usd_out', 'time', 'diffN')
 df.cache() # improves computational time 
 df.printSchema()
 # ========================
 # Correlation Heat Map
 # ========================
-features_corr = ['timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change']
+features_corr = ['timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'diffN']
 assembler = VectorAssembler(inputCols=features_corr, outputCol='corr_features')
 vector_corr = assembler.transform(df).select('corr_features')
 matrix = Correlation.corr(vector_corr, 'corr_features').collect()[0][0]
@@ -50,18 +50,19 @@ def heatmap(X, columns, name):
         plt.savefig(fname)
         plt.close()
         pass
+
 heatmap(corrmatrix, features_corr, 'txs_corrmatrix')
 # ==========================
 # K-Means Model
 # ==========================
-features = ['timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change']
+features = ['n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'diffN']
 assembler = VectorAssembler(inputCols=features, outputCol='features')
 scalar = StandardScaler(inputCol='features', outputCol='scFeatures', withStd=True, withMean=True)
 #pipeline
 pipeline = Pipeline(stages=[assembler, scalar])
 pipelineFit = pipeline.fit(df)
 df_sc = pipelineFit.transform(df)
-# Trains a k-means model.
+# find the best k for a k-means model.
 def getSilhouette(df, model='KMeans'):
     silhouette_ls = []
     if model == 'KMeans':
@@ -73,15 +74,19 @@ def getSilhouette(df, model='KMeans'):
             # Evaluate clustering by computing Silhouette score
             evaluator = ClusteringEvaluator()
             silhouette_ls.append(round(evaluator.evaluate(predictions), 2))
-    return silhouette_ls
+        best_k = silhouette_ls.index(np.max(silhouette_ls))+2
+        print('****************************SILHOUETTE*************************************************')
+        print(f'The best K is: {best_k} associated with a silhoutte of: {np.max(silhouette_ls)}')
+    return silhouette_ls, best_k
 
-silhouette_km = np.array(getSilhouette(df_sc))
+sil_ls, k = getSilhouette(df_sc)
+silhouette_km = np.array(sil_ls)
 x = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 plt.plot(x, silhouette_km, linewidth=1, marker='.', label='Kmeans')
-plt.title('silhouette metrics: KMeans')
 plt.xlabel('K')
+plt.title('silhouette metrics: KMeans')
 plt.grid()
-plt.savefig('plots/KmeansSil.png')
+plt.savefig('plots/KmeansSil_diffN.png')
 plt.close()
 
 sc.stop()
