@@ -18,22 +18,27 @@ from datetime import datetime as dt
 import matplotlib.pyplot as plt
 
 
+
+
+
+
 # =======================
 # Spark Conf
 # =======================
 conf = SparkConf().setAppName('BC App')
 sc = SparkContext(conf=conf)  # connection between driver script and cluster (RDD)
 spark = SparkSession.builder.getOrCreate() # bridge between driver script and Spark DataFrame
+spark.sparkContext.setLogLevel('ERROR')
 # ======================
 # Read dataset
 # ======================
-df = spark.read.csv("txsData/txs_small.csv", header=True, inferSchema=True).toDF('id', 'timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'date', 'usdAvg', 'usd_in', 'usd_out', 'time', 'diffN')
+df = spark.read.csv("txsData/txs_small.csv", header=True, inferSchema=True).toDF('id', 'timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'date', 'usdAvg', 'SA', 'usd_in', 'usd_out', 'time', 'diffN')
 df.cache() # improves computational time 
 df.printSchema()
 # ========================
 # Correlation Heat Map
 # ========================
-features_corr = ['timestamp', 'n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'diffN']
+features_corr = ['n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'diffN', 'SA']
 assembler = VectorAssembler(inputCols=features_corr, outputCol='corr_features')
 vector_corr = assembler.transform(df).select('corr_features')
 matrix = Correlation.corr(vector_corr, 'corr_features').collect()[0][0]
@@ -55,7 +60,7 @@ heatmap(corrmatrix, features_corr, 'txs_corrmatrix')
 # ==========================
 # K-Means Model
 # ==========================
-features = ['n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'diffN']
+features = ['n_in', 'n_out', 'amount_in', 'amount_out', 'change', 'diffN', 'SA']
 assembler = VectorAssembler(inputCols=features, outputCol='features')
 scalar = StandardScaler(inputCol='features', outputCol='scFeatures', withStd=True, withMean=True)
 #pipeline
@@ -89,4 +94,12 @@ plt.grid()
 plt.savefig('plots/KmeansSil_diffN.png')
 plt.close()
 
+# K Means with the best K
+kmeans = KMeans().setK(k).setSeed(12)
+model = kmeans.fit(df_sc)
+predictions = model.transform(df_sc)
+# Save the DF with labels
+final = predictions.select('prediction', *features)
+final.printSchema()
+final.write.csv('txsDataWithLabels', header=True)
 sc.stop()

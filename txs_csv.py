@@ -40,16 +40,26 @@ def usd_avg(x):
 def toTime(x):
     return dt.fromtimestamp(x).strftime("%H:%M:%S")
 
+def strangeAmount(x):
+
+    if x % 10 != 0:
+        return 1
+    else:
+        return 0
+
+
 # register UDFs
 toDate = F.udf(toDate)
 usd_avg = F.udf(usd_avg)
 toTime = F.udf(toTime)
+strangeAmount = F.udf(strangeAmount)
 
 dfDate = df.withColumn('date', toDate(F.col('timestamp')))  # add a new column: date %Y/%m/%d from timestamp
 
 
 dfavg = dfDate.withColumn('usdAvg', usd_avg(F.col('date')))  # add a new column: avg USD for the given date
-final = dfavg.withColumn('usd_in', F.col('usdAvg')*(F.col('amount_in')*C))\
+dfSA = dfavg.withColumn('SA', strangeAmount(F.col('amount_out')))
+final = dfSA.withColumn('usd_in', F.col('usdAvg')*(F.col('amount_in')*C))\
              .withColumn('usd_out', F.col('usdAvg')*(F.col('amount_out')*C))
 
 final = final.withColumn('time', toTime(F.col('timestamp'))) \

@@ -1,2 +1,2 @@
 ## Bitcoin-explore
-A PySpark application to analise BitCoin transactions
+A Spark application to analise BitCoin transactions
