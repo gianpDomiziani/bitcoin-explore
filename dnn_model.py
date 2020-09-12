@@ -36,10 +36,10 @@ def pack_features_vector(features, labels):
 train = dataset.map(pack_features_vector)
 #BUILD THE MODEL
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(20, activation='relu', input_shape=(7,)),
-    tf.keras.layers.Dropout(0.1),
-    tf.keras.layers.Dense(10, activation='relu'),
-    tf.keras.layers.Dense(1)
+    tf.keras.layers.Dense(20, activation='softmax', input_shape=(7,)),
+    #tf.keras.layers.Dropout(0.1),
+    #tf.keras.layers.Dense(10, activation='relu'),
+    tf.keras.layers.Dense(1, activation='relu')
 ])
 print(model.summary())
 #TRAIN
