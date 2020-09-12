@@ -37,12 +37,13 @@ train = dataset.map(pack_features_vector)
 #BUILD THE MODEL
 model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(20, activation='relu', input_shape=(7,)),
+    tf.keras.layers.Dropout(0.1),
     tf.keras.layers.Dense(10, activation='relu'),
     tf.keras.layers.Dense(1)
 ])
 print(model.summary())
 #TRAIN
-loss_obj = tf.keras.losses.MeanSquaredLogarithmicError()
+loss_obj = tf.keras.losses.MeanAbsoluteError()
 def loss(model, x, y, training):
     y_ = model(x, training=training)
     return loss_obj(y_true=y, y_pred=y_)
@@ -56,14 +57,14 @@ def scalar(data):
     data = (data-np.mean(data))/np.std(data)
     return data
 
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.0001)
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.001)
 
 train_loss_results = []
 train_accuracy_results = []
 num_epochs = 251
 for epoch in range(num_epochs):
   epoch_loss_avg = tf.keras.metrics.Mean()
-  epoch_accuracy = tf.keras.metrics.MeanSquaredLogarithmicError()
+  epoch_accuracy = tf.keras.metrics.MeanAbsoluteError()
 
   # Training loop - using batches of 32
   for x, y in train:
@@ -84,18 +85,21 @@ for epoch in range(num_epochs):
   train_accuracy_results.append(epoch_accuracy.result())
 
   if epoch % 50 == 0:
-    print("Epoch {:03d}: Loss: {:.3f}, Accuracy: {:.3%}".format(epoch,
+    print("Epoch {:03d}: AVG Loss: {:.3f}, Loss: {:.3%}".format(epoch,
                                                                 epoch_loss_avg.result(),
                                                                 epoch_accuracy.result()))
 
 
 fig, axes = plt.subplots(2, sharex=True, figsize=(12, 8))
 fig.suptitle('Training Metrics')
-axes[0].set_ylabel("AVG Loss epoch", fontsize=14)
+axes[0].set_ylabel("AVG MAE", fontsize=14)
+plt.grid()
 axes[0].plot(train_loss_results)
 
 
-axes[1].set_ylabel("Loss", fontsize=14)
+axes[1].set_ylabel("MAE", fontsize=14)
+plt.grid()
 axes[1].plot(train_accuracy_results)
+
 plt.savefig('plots/training_metrics.png')
 plt.show()
