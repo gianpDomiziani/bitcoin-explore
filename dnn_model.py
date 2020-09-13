@@ -1,6 +1,7 @@
 import tensorflow as tf 
 import numpy as np
 import matplotlib.pyplot as plt
+from functools import partial
 
 LABEL_NAME = 'prediction'
 filePath = "txsDataWithLabels/txsWithLabels.csv"
@@ -35,24 +36,21 @@ def pack_features_vector(features, labels):
 
 train = dataset.map(pack_features_vector)
 #BUILD THE MODEL
+
+RegularizedDense = partial(tf.keras.layers.Dense,
+                           activation="relu",
+                           kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+                           bias_regularizer=tf.keras.regularizers.l2(1e-4),
+                           activity_regularizer=tf.keras.regularizers.l2(1e-5))
+
 model = tf.keras.models.Sequential([
     tf.keras.layers.Dense(units=10, activation='relu', input_shape=(7,),
                           kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
                           bias_regularizer=tf.keras.regularizers.l2(1e-4),
                           activity_regularizer=tf.keras.regularizers.l2(1e-5)),
     tf.keras.layers.Dropout(0.1),
-    tf.keras.layers.Dense(
-        units=64,
-        activation='relu',
-        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
-        bias_regularizer=tf.keras.regularizers.l2(1e-4),
-        activity_regularizer=tf.keras.regularizers.l2(1e-5)),
-    tf.keras.layers.Dense(
-        units=12,
-        activation='relu',
-        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
-        bias_regularizer=tf.keras.regularizers.l2(1e-4),
-        activity_regularizer=tf.keras.regularizers.l2(1e-5)),
+    RegularizedDense(26),
+    RegularizedDense(12),
     tf.keras.layers.Dense(1)
 ])
 print(model.summary())
