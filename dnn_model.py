@@ -48,7 +48,7 @@ model = tf.keras.models.Sequential([
                           kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
                           bias_regularizer=tf.keras.regularizers.l2(1e-4),
                           activity_regularizer=tf.keras.regularizers.l2(1e-5)),
-    tf.keras.layers.Dropout(0.1),
+    #tf.keras.layers.Dropout(0.1),
     RegularizedDense(26),
     RegularizedDense(12),
     tf.keras.layers.Dense(1)
