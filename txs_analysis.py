@@ -79,9 +79,9 @@ def getSilhouette(df, model='KMeans'):
             # Evaluate clustering by computing Silhouette score
             evaluator = ClusteringEvaluator()
             silhouette_ls.append(round(evaluator.evaluate(predictions), 2))
-        best_k = silhouette_ls.index(np.max(silhouette_ls))+2
+        best_k = silhouette_ls.index(np.min(silhouette_ls))+2
         print('****************************SILHOUETTE*************************************************')
-        print(f'The best K is: {best_k} associated with a silhoutte of: {np.max(silhouette_ls)}')
+        print(f'The best K is: {best_k} associated with a silhoutte of: {np.min(silhouette_ls)}')
     return silhouette_ls, best_k
 
 sil_ls, k = getSilhouette(df_sc)

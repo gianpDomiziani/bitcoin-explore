@@ -1,5 +1,6 @@
 /.venvBC
 /.vscode
+/.idea
 /datasets
 /txsData
 /txsDataWithLabels
