@@ -36,10 +36,24 @@ def pack_features_vector(features, labels):
 train = dataset.map(pack_features_vector)
 #BUILD THE MODEL
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Dense(20, activation='softmax', input_shape=(7,)),
-    #tf.keras.layers.Dropout(0.1),
-    #tf.keras.layers.Dense(10, activation='relu'),
-    tf.keras.layers.Dense(1, activation='relu')
+    tf.keras.layers.Dense(units=10, activation='relu', input_shape=(7,),
+                          kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+                          bias_regularizer=tf.keras.regularizers.l2(1e-4),
+                          activity_regularizer=tf.keras.regularizers.l2(1e-5)),
+    tf.keras.layers.Dropout(0.1),
+    tf.keras.layers.Dense(
+        units=64,
+        activation='relu',
+        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+        bias_regularizer=tf.keras.regularizers.l2(1e-4),
+        activity_regularizer=tf.keras.regularizers.l2(1e-5)),
+    tf.keras.layers.Dense(
+        units=12,
+        activation='relu',
+        kernel_regularizer=tf.keras.regularizers.l1_l2(l1=1e-5, l2=1e-4),
+        bias_regularizer=tf.keras.regularizers.l2(1e-4),
+        activity_regularizer=tf.keras.regularizers.l2(1e-5)),
+    tf.keras.layers.Dense(1)
 ])
 print(model.summary())
 #TRAIN
@@ -103,3 +117,11 @@ axes[1].plot(train_accuracy_results)
 
 plt.savefig('plots/training_metrics.png')
 plt.show()
+
+ls = []
+for t, l in train:
+    t = scalar(t)
+    p = model(t)
+    ls.append(loss(model, t, l, True))
+    print(l)
+    print(p)
