@@ -1,7 +1,11 @@
 import susi
 from susi.SOMPlots import *
 
+import pandas as pd
 import numpy as np
+np.random.seed(12)
+
+from sklearn.preprocessing import StandardScaler
 
 
 class SOM_ClusterModel():
@@ -69,6 +73,13 @@ if __name__ == '__main__':
 
     s = np.random.random((1, 7))
     u = som.getUtility(s)
+
+    df = pd.read_csv('txsData/txs_small.csv', header=0)
+
+    X = df.drop(['id', 'timestamp', 'usdAvg', 'usd_in', 'usd_out', 'date', 'time'], axis=1).to_numpy()
+
+    X = StandardScaler().fit_transform(X)
+    U = [som.getUtility(s.reshape((1,7))) for s in X]
 
 
 
